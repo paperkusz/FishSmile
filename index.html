@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>🌿 GreenSync Duel — Form → Dashboard</title>
+<title>🌿 GreenSync Duel — Form → Dashboard → Insights</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
 <style>
   :root{
     --bg:#f5f7fa;--text:#1f2430;--muted:#667085;--card:#fff;--border:#e5e7eb;
@@ -33,12 +34,13 @@
   .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .btn{display:inline-flex;gap:8px;align-items:center;border-radius:999px;padding:10px 16px;border:1px solid var(--primary);background:var(--primary);color:#fff;cursor:pointer;font-weight:600;transition:.2s}
   .btn:hover{background:var(--primary-dark);transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.1)}
+  .btn.ghost{background:#fff;color:var(--primary-dark)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media(max-width:900px){.row{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
   .kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
   .kpi .it{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:8px 10px}
   .kpi .v{font-weight:700}
-  .hearts{font-size:28px;line-height:1.1;color:#e91e63}
+  .hearts{font-size:28px;line-height:1.1;color:#e91e63;word-break:break-word}
   table{width:100%;border-collapse:collapse}
   th,td{padding:6px 8px;border-bottom:1px solid var(--border);font-size:13px}
   thead th{background:#f8fafc}
@@ -46,6 +48,19 @@
   .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:var(--primary-light);color:var(--primary-dark);font-weight:600;font-size:12px}
   .err{color:#b91c1c;font-weight:600}
   .ok{color:#047857;font-weight:600}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#fff}
+  .sub{font-size:12px;color:var(--muted)}
+  .sp{display:inline-flex;align-items:center;gap:8px}
+  .dot{width:10px;height:10px;border-radius:999px;background:#9ca3af;display:inline-block}
+  .dot.ok{background:#10b981}.dot.fail{background:#ef4444}.dot.load{background:#f59e0b}
+  .spinner{width:18px;height:18px;border:3px solid #e5e7eb;border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* Mascot & illustrations */
+  .hero{display:flex;align-items:center;gap:12px}
+  .mascot{width:64px;height:64px}
+  .teamBadge{display:flex;align-items:center;gap:8px}
+  .teamIcon{width:18px;height:18px}
 </style>
 </head>
 <body>
@@ -53,11 +68,27 @@
   <!-- Header -->
   <div class="card">
     <div class="bd flex" style="justify-content:space-between">
-      <div>
-        <div class="h1">🌿 GreenSync — Duel Mode</div>
-        <div class="muted">กรอกโปรไฟล์ → เริ่มแข่งขัน → แดชบอร์ด 2 กระถาง พร้อมคะแนนเป็นรูปหัวใจ</div>
+      <div class="hero">
+        <svg class="mascot" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-opacity="1" stop-color="#34d399"/>
+              <stop offset="100%" stop-opacity="1" stop-color="#10b981"/>
+            </linearGradient>
+          </defs>
+          <circle cx="64" cy="64" r="62" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="4"/>
+          <path d="M64 72c-14 0-22-10-22-22 10 0 18 4 22 10 4-6 12-10 22-10 0 12-8 22-22 22z" fill="url(#g1)"/>
+          <rect x="36" y="76" width="56" height="26" rx="8" fill="#f59e0b"/>
+          <rect x="42" y="82" width="44" height="6" rx="3" fill="#fed7aa"/>
+          <rect x="48" y="92" width="32" height="6" rx="3" fill="#fed7aa"/>
+        </svg>
+        <div>
+          <div class="h1">🌿 GreenSync — Duel Mode</div>
+          <div class="muted">กรอกโปรไฟล์ → แดชบอร์ด 2 กระถาง → สรุปเชิงลึก (หัวใจ/สุขภาพ)</div>
+        </div>
       </div>
       <div class="flex">
+        <button class="btn ghost" id="btnEditProfile" title="แก้ไขโปรไฟล์" style="display:none"><i class="fa-solid fa-user-pen"></i> แก้ไขโปรไฟล์</button>
         <select id="theme" title="ธีม">
           <option value="default">ธีมปกติ</option>
           <option value="kid">ธีมเด็ก</option>
@@ -70,6 +101,14 @@
         <span class="badge"><i class="fa-solid fa-clock"></i> <span id="nowTH">—</span></span>
       </div>
     </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="flex" style="margin:0 0 12px 2px">
+    <button class="btn ghost" id="navForm"><i class="fa-regular fa-rectangle-list"></i> แบบฟอร์ม</button>
+    <button class="btn ghost" id="navDash"><i class="fa-solid fa-gauge"></i> แดชบอร์ด</button>
+    <button class="btn ghost" id="navInsight"><i class="fa-solid fa-heart-pulse"></i> สรุปเชิงลึก</button>
+    <span class="muted" id="profileBadge" style="display:none"><i class="fa-solid fa-circle-check"></i> บันทึกโปรไฟล์แล้ว</span>
   </div>
 
   <!-- FORM -->
@@ -127,9 +166,21 @@
         </div>
       </div>
 
+      <div class="row" style="margin-top:8px">
+        <div>
+          <label>รอบอัปเดต (วินาที)</label>
+          <select id="interval"><option>10</option><option selected>20</option><option>30</option><option>60</option></select>
+        </div>
+        <div>
+          <label>โหมดทดสอบ (ไม่มีเว็บแอป)</label>
+          <select id="demo"><option value="off" selected>ปิด</option><option value="on">เปิด</option></select>
+        </div>
+      </div>
+
       <div style="margin-top:12px" class="flex">
         <button class="btn" id="btnStart"><i class="fa-solid fa-play"></i> เริ่มแข่งขัน ➜ เปิดแดชบอร์ด</button>
-        <span id="status" class="muted"></span>
+        <span id="status" class="muted sp"><span class="dot" id="dot"></span><span id="statusText"></span></span>
+        <button class="btn ghost" id="btnTest"><i class="fa-solid fa-plug"></i> ทดสอบการเชื่อมต่อ</button>
       </div>
     </div>
   </div>
@@ -141,7 +192,7 @@
       <!-- LEFT -->
       <div>
         <div class="flex" style="justify-content:space-between">
-          <div class="muted">ทีม A</div>
+          <div class="teamBadge"><svg class="teamIcon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#86efac"/><path d="M12 6c-3 0-4 2-4 4 2 0 3 .5 4 2 1.1-1.5 2-2 4-2 0-2-1-4-4-4z" fill="#16a34a"/></svg><div class="muted">ทีม A</div></div>
           <div class="badge"><i class="fa-solid fa-database"></i> <span id="dsA">—</span></div>
         </div>
         <div class="kpi" style="margin-top:8px">
@@ -162,7 +213,7 @@
       <!-- RIGHT -->
       <div>
         <div class="flex" style="justify-content:space-between">
-          <div class="muted">ทีม B</div>
+          <div class="teamBadge"><svg class="teamIcon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="6" fill="#93c5fd"/><path d="M12 6c-3 0-4 2-4 4 2 0 3 .5 4 2 1.1-1.5 2-2 4-2 0-2-1-4-4-4z" fill="#2563eb"/></svg><div class="muted">ทีม B</div></div>
           <div class="badge"><i class="fa-solid fa-database"></i> <span id="dsB">—</span></div>
         </div>
         <div class="kpi" style="margin-top:8px">
@@ -180,222 +231,425 @@
         </table>
       </div>
     </div>
+    <div class="bd" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="btnGoInsights"><i class="fa-solid fa-heart-pulse"></i> ไปหน้าสรุปเชิงลึก</button>
+      <button class="btn ghost" id="btnRefresh"><i class="fa-solid fa-rotate"></i> รีเฟรชทันที</button>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="card" id="secInsights" style="display:none">
+    <div class="hd">สรุปเชิงลึก: หัวใจสะสม + สิ่งแวดล้อม & สุขภาพ</div>
+    <div class="bd">
+      <div class="chips">
+        <span class="chip">คะแนน = รูปหัวใจ (1–10)</span>
+        <span class="chip">PM2.5 ใช้ µg/m³</span>
+        <span class="chip">UV Index ใช้ค่าจากชีต (ถ้ามี)</span>
+      </div>
+      <div style="margin:12px 0">
+        <canvas id="chartHearts" height="120"></canvas>
+      </div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div class="card" style="margin:0">
+          <div class="hd">ทีม A — สุขภาพวันนี้</div>
+          <div class="bd">
+            <div id="healthA">—</div>
+          </div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="hd">ทีม B — สุขภาพวันนี้</div>
+          <div class="bd">
+            <div id="healthB">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div>
+          <div class="h1" style="font-size:18px;margin:0 0 6px">สรุปคะแนนรายวัน</div>
+          <div id="dailyTable" class="sub">—</div>
+        </div>
+        <div>
+          <div class="h1" style="font-size:18px;margin:0 0 6px">สรุปคะแนนรายสัปดาห์</div>
+          <div id="weeklyTable" class="sub">—</div>
+        </div>
+      </div>
+
+      <div class="flex" style="margin-top:12px">
+        <button class="btn ghost" id="btnBackDash"><i class="fa-solid fa-gauge"></i> กลับแดชบอร์ด</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
+// ===== Helpers =====
 const $  = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-
-// ===== Utilities =====
 const tz = 'Asia/Bangkok';
-const fmtDashTime = iso => {
-  if(!iso) return '-';
-  const d = new Date(iso);
-  return d.toLocaleString('th-TH',{ timeZone: tz, hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' });
-};
-const safeNum = (v) => {
-  const n = Number(String(v).replace(/,/g,''));
-  return isFinite(n) ? n : null;
-};
-const getFirst = (obj, keys) => {
-  for(const k of keys){ if(obj && obj[k]!=null && obj[k]!=='' ) return obj[k]; }
-  return null;
-};
-const hearts = score => {
-  if(score==null) return '—';
-  const s = Math.max(0, Math.min(10, Math.round(score)));
-  return s>0 ? '❤'.repeat(s) : '—';
-};
-const uiStatus = (msg, ok=false) => {
-  const el = $('#status');
-  el.className = ok ? 'ok' : 'err';
-  el.textContent = msg;
-};
+const byId = id => document.getElementById(id);
+const setTextSafe = (id, text)=>{ const el = byId(id); if(el) el.textContent = text; };
+const bind = (id, ev, fn)=>{ const el = byId(id); if(el) el.addEventListener(ev, fn); else console.warn('Missing element for event binding:', id); };
+const fmtTime = iso => !iso?'-': new Date(iso).toLocaleString('th-TH',{timeZone:tz,hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'});
+const fmtDate = iso => !iso?'-': new Date(iso).toLocaleDateString('th-TH',{timeZone:tz});
+const hearts = n => n>0 ? '❤'.repeat(Math.max(1,Math.min(10,Math.round(n)))) : '—';
+const safeNum = v => { const n = Number(String(v).replace(/,/g,'')); return isFinite(n)? n:null; };
+const nowTick = ()=> setTextSafe('nowTH', new Date().toLocaleString('th-TH',{ timeZone: tz }));
+function onReady(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
 
-// live clock
-const tick = () => { $('#nowTH').textContent = new Date().toLocaleString('th-TH',{ timeZone: tz }); };
-tick(); setInterval(tick, 1000);
-
-// theme
-const applyTheme = (val) => {
-  document.body.classList.remove('theme-kid','theme-teen','theme-adult','theme-cny','theme-valentine','theme-newyear');
-  if(val && val!=='default') document.body.classList.add('theme-'+val);
-  localStorage.setItem('theme', val||'default');
-};
-$('#theme').value = localStorage.getItem('theme') || 'default';
-applyTheme($('#theme').value);
-$('#theme').addEventListener('change', e => applyTheme(e.target.value));
-
-// persist form
-['webapp','webappA','webappB','limit','plant','size','lightCond','airflow','ac','name'].forEach(id=>{
-  const v = localStorage.getItem('gs_'+id);
-  if(v!==null) $('#'+id).value = v;
-  $('#'+id).addEventListener('change', e=> localStorage.setItem('gs_'+id, e.target.value));
+// ===== Theme & form persistence (on DOM ready) =====
+onReady(()=>{
+  setInterval(nowTick,1000); nowTick();
+  const themeSel = byId('theme');
+  if(themeSel){
+    const saved = localStorage.getItem('theme')||'default';
+    themeSel.value = saved;
+    applyTheme(saved);
+    themeSel.addEventListener('change',e=>applyTheme(e.target.value));
+  }
+  ['webapp','webappA','webappB','limit','plant','size','lightCond','airflow','ac','name','interval','demo'].forEach(id=>{
+    const el = byId(id); if(!el) return;
+    const v = localStorage.getItem('gs_'+id); if(v!==null) el.value=v;
+    el.addEventListener('change',e=> localStorage.setItem('gs_'+id, e.target.value));
+  });
 });
 
-// ===== Data adapters (รองรับหลาย schema) =====
+// theme apply
+const applyTheme = v => { document.body.className=''; if(v && v!=='default') document.body.classList.add('theme-'+v); localStorage.setItem('theme',v||'default'); };
+
+// ===== Column adapters =====
 const COLS = {
   ts: ['Timestamp (Asia/Bangkok)','Timestamp','time','Time'],
-  tC: ['AirTemp_C','Temperature (°C)','Temp_C','Temp','Temperature'],
-  rh: ['AirHumid_%RH','Humid (%)','Humidity (%)','Humidity','AirHumidity'],
-  soil: ['SoilMoist_%','Soil Moisture (%)','Soil_%','Soil','SoilMoisture'],
-  light: ['Light_%','Light (%)','Lux_%','Light'],
+  tC: ['Temperature (°C)','AirTemp_C','Temp_C','Temp','Temperature'],
+  rh: ['Air Humidity (%)','Humid (%)','AirHumid_%RH','Humidity'],
+  soil: ['Soil Moisture (%)','SoilMoist_%','Soil'],
+  light: ['Light (%)','Light_%','Light'],
+  pm25: ['PM2.5 (µg/m³)','PM2_5','pm25','PM2.5'],
+  uv: ['UV Index','UV','UV_Index']
 };
-const SCORE = {
-  score: ['Score_1_10','Score','Score_0_5','Score1_10'],
-  advice: ['Advice','AI_Advice','Note','Tips']
-};
-function pickRowValue(row, list){ return getFirst(row, list); }
+const SCORE = { score:['Score_1_10','Score','Score1_10'], advice:['Advice','AI_Advice','Note'], ts:['Timestamp','Timestamp (Asia/Bangkok)','time'] };
+const pick = (row, keys)=>{ for(const k of keys){ if(row && row[k]!=null && row[k]!=='' && row[k]!==undefined) return row[k]; } return null; };
 
-// ===== Backend URLs =====
-const buildURL = (base, params={}) => {
-  const u = new URL(base);
-  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
-  return u.toString();
-};
+// ===== Backend helper =====
+const buildURL = (base, obj={}) => { const u=new URL(base); Object.entries(obj).forEach(([k,v])=>u.searchParams.set(k,v)); return u.toString(); };
+async function getJSON(url){ const r=await fetch(url, {cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+async function postJSON(url, payload){ const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); return r.json().catch(()=>({})); }
 
-// ===== Fetchers =====
-async function postJSON(url, payload){
-  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  return res.json().catch(()=> ({}));
-}
-async function getJSON(url){
-  const res = await fetch(url);
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  return res.json();
+// ===== UI status helpers =====
+function setStatus(type,msg){
+  const dot = byId('dot');
+  const statusText = byId('statusText');
+  if(!dot || !statusText) return;
+  dot.classList.remove('ok','fail','load');
+  if(type==='ok') dot.classList.add('ok');
+  else if(type==='fail') dot.classList.add('fail');
+  else dot.classList.add('load');
+  statusText.textContent = msg||'';
 }
 
-// ===== Main flow =====
-$('#btnStart').addEventListener('click', async ()=>{
-  const base = $('#webapp').value.trim();
-  const baseA = $('#webappA').value.trim();
-  const baseB = $('#webappB').value.trim();
-  if(!base && !(baseA && baseB)){
-    uiStatus('กรุณาใส่ Web App URL (อย่างน้อยช่องบน หรือแยกทีม A/B)', false);
-    return;
-  }
-  const urlA = baseA || base;
-  const urlB = baseB || base;
-
-  // Validate URL format
-  try{ new URL(urlA); new URL(urlB); }catch(e){ uiStatus('URL ไม่ถูกต้อง โปรดตรวจสอบให้ลงท้ายด้วย /exec', false); return; }
-
-  // Save profile A/B (เงียบๆ)
-  const pf = {
-    action:"saveProfile",
-    name: $('#name').value.trim(),
-    plant: $('#plant').value.trim(),
-    size: $('#size').value.trim(),
-    light: $('#lightCond').value,
-    airflow: $('#airflow').value,
-    ac: $('#ac').value
-  };
-
-  $('#status').className='muted'; $('#status').textContent='กำลังบันทึกโปรไฟล์ทีม A/B...';
-  try{
-    await Promise.allSettled([
-      postJSON(urlA, {...pf, team:'A'}),
-      postJSON(urlB, {...pf, team:'B'})
-    ]);
-    $('#status').className='ok'; $('#status').textContent='พร้อมแล้ว • โหลดข้อมูล…';
-  }catch(e){
-    uiStatus('บันทึกโปรไฟล์ล้มเหลว แต่จะลองโหลดข้อมูลต่อ (เช็ค CORS/Deployment)', false);
-  }
-
-  // show dash
-  $('#secForm').style.display='none';
-  $('#secDash').style.display='block';
-  $('#dsA').textContent = (new URL(urlA)).host;
-  $('#dsB').textContent = (new URL(urlB)).host;
-
-  startDashboard({urlA, urlB, limit: Number($('#limit').value || 50)});
+// ===== Navigation =====
+const show = id => { ['secForm','secDash','secInsights'].forEach(x=> { const el=byId(x); if(el) el.style.display = (x===id)?'block':'none'; }); };
+onReady(()=>{
+  bind('navForm','click', ()=> show('secForm'));
+  bind('navDash','click', ()=> show('secDash'));
+  bind('navInsight','click', ()=> show('secInsights'));
+  bind('btnEditProfile','click', ()=> show('secForm'));
 });
 
-async function startDashboard({urlA, urlB, limit}){
-  async function fetchPack(url, team){
-    // data
-    const dataUrl = buildURL(url, {action:'data', team, limit});
-    // analyze now (non-blocking)
-    const anaUrl  = buildURL(url, {action:'analyzeNow', team});
-    // score
-    const scoreUrl= buildURL(url, {action:'score', team});
+// ===== Start flow & auto-continue =====
+let ctx={urlA:'',urlB:'',limit:50, interval:20000, cache:{A:{},B:{}}};
 
-    const [dataRes, _ana, scoreRes] = await Promise.allSettled([
-      getJSON(dataUrl),
-      fetch(anaUrl).catch(()=>{}),
-      getJSON(scoreUrl)
-    ]);
+(function autoStart(){
+  onReady(()=>{
+    const done = localStorage.getItem('gs_profile_done')==='1';
+    const urlA = localStorage.getItem('gs_last_urlA');
+    const urlB = localStorage.getItem('gs_last_urlB');
+    const limit = +(localStorage.getItem('gs_last_limit')||50);
+    const interval = +(localStorage.getItem('gs_last_interval')||20000);
+    const demo = localStorage.getItem('gs_last_demo')==='on';
+    if(done && urlA && urlB){
+      ctx={urlA,urlB,limit,interval,cache:{A:{},B:{}}};
+      try{ byId('dsA') && (byId('dsA').textContent= demo? 'DEMO' : (new URL(urlA)).host); }catch(e){}
+      try{ byId('dsB') && (byId('dsB').textContent= demo? 'DEMO' : (new URL(urlB)).host); }catch(e){}
+      const navForm = byId('navForm'); if(navForm) navForm.style.display='none';
+      const btnEdit = byId('btnEditProfile'); if(btnEdit) btnEdit.style.display='inline-flex';
+      const profBadge = byId('profileBadge'); if(profBadge) profBadge.style.display='inline-flex';
+      show('secDash');
+      startDashboard();
+    }
+  });
+})();
 
-    const rows   = (dataRes.status==='fulfilled' && dataRes.value && dataRes.value.rows) ? dataRes.value.rows : [];
-    const scores = (scoreRes.status==='fulfilled' && scoreRes.value && scoreRes.value.rows) ? scoreRes.value.rows : [];
-    return {rows, scores};
-  }
-
-  async function render(url, team, prefix){
+// ===== Buttons (onReady) =====
+onReady(()=>{
+  bind('btnTest','click', async ()=>{
+    const baseA = (byId('webappA')?.value.trim()||byId('webapp')?.value.trim()||'');
+    if(!baseA){ setStatus('fail','ยังไม่ได้ใส่ URL'); return; }
+    try{ new URL(baseA); }catch(_){ setStatus('fail','URL ไม่ถูกต้อง'); return; }
+    setStatus('load','ทดสอบเชื่อมต่อ…');
     try{
-      const {rows, scores} = await fetchPack(url, team);
+      const ping = await getJSON(buildURL(baseA,{action:'ping'}));
+      if(ping && (ping.ok||ping.status==='ok')) setStatus('ok','เชื่อมต่อได้'); else setStatus('fail','ตอบกลับไม่ถูกต้อง');
+    }catch(e){ setStatus('fail','ติดต่อไม่ได้'); }
+  });
 
-      // KPI last row
-      if(rows.length){
-        const r0 = rows[0];
-        const tC   = safeNum(pickRowValue(r0, COLS.tC));
-        const rh   = safeNum(pickRowValue(r0, COLS.rh));
-        const soil = safeNum(pickRowValue(r0, COLS.soil));
-        const li   = safeNum(pickRowValue(r0, COLS.light));
+  bind('btnStart','click', async ()=>{
+    const base = byId('webapp')?.value.trim()||'';
+    const baseA = byId('webappA')?.value.trim()||'';
+    const baseB = byId('webappB')?.value.trim()||'';
+    const demo = byId('demo')?.value==='on';
+    if(!demo && !base && !(baseA && baseB)){ setStatus('fail','กรุณาใส่ Web App URL (ลงท้าย /exec) หรือเปิดโหมดทดสอบ'); return; }
+    const urlA = demo? 'demo://A' : (baseA || base);
+    const urlB = demo? 'demo://B' : (baseB || base);
+    if(!demo){
+      try{ new URL(urlA); new URL(urlB); }catch(_){ setStatus('fail','URL ไม่ถูกต้อง'); return; }
+    }
 
-        $('#'+prefix+'temp').textContent  = tC!=null   ? tC.toFixed(1) : '-';
-        $('#'+prefix+'hum').textContent   = rh!=null   ? rh           : '-';
-        $('#'+prefix+'soil').textContent  = soil!=null ? soil         : '-';
-        $('#'+prefix+'light').textContent = li!=null   ? li           : '-';
+    const pf = {action:'saveProfile', name:byId('name')?.value.trim()||'', plant:byId('plant')?.value.trim()||'', size:byId('size')?.value.trim()||'', light:byId('lightCond')?.value, airflow:byId('airflow')?.value, ac:byId('ac')?.value};
+    setStatus('load','กำลังบันทึกโปรไฟล์…');
+    if(!demo) await Promise.allSettled([ postJSON(urlA,{...pf,team:'A'}), postJSON(urlB,{...pf,team:'B'}) ]);
+    setStatus('ok','พร้อมแล้ว');
 
-        const tb = $('#'+prefix+'tbl'); tb.innerHTML='';
-        rows.slice(0, limit).forEach(o=>{
-          const ts   = pickRowValue(o, COLS.ts);
-          const tC_  = pickRowValue(o, COLS.tC);
-          const rh_  = pickRowValue(o, COLS.rh);
-          const soil_= pickRowValue(o, COLS.soil);
-          const li_  = pickRowValue(o, COLS.light);
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${fmtDashTime(ts)}</td>
-            <td style="text-align:center">${tC_ ?? '-'}</td>
-            <td style="text-align:center">${rh_ ?? '-'}</td>
-            <td style="text-align:center">${soil_ ?? '-'}</td>
-            <td style="text-align:center">${li_ ?? '-'}</td>`;
+    localStorage.setItem('gs_last_urlA', urlA);
+    localStorage.setItem('gs_last_urlB', urlB);
+    localStorage.setItem('gs_last_limit', String(Number(byId('limit')?.value||50)));
+    localStorage.setItem('gs_last_interval', String(Number(byId('interval')?.value||20)*1000));
+    localStorage.setItem('gs_last_demo', demo?'on':'off');
+    localStorage.setItem('gs_profile_done','1');
+
+    const navForm = byId('navForm'); if(navForm) navForm.style.display='none';
+    const btnEdit = byId('btnEditProfile'); if(btnEdit) btnEdit.style.display='inline-flex';
+    const profBadge = byId('profileBadge'); if(profBadge) profBadge.style.display='inline-flex';
+
+    ctx={urlA,urlB,limit:Number(byId('limit')?.value||50), interval:Number(byId('interval')?.value||20)*1000, cache:{A:{},B:{}}};
+    try{
+      byId('dsA') && (byId('dsA').textContent = (demo? 'DEMO' : (new URL(urlA)).host));
+      byId('dsB') && (byId('dsB').textContent = (demo? 'DEMO' : (new URL(urlB)).host));
+    }catch(e){}
+    show('secDash');
+    startDashboard();
+  });
+
+  bind('btnGoInsights','click', ()=>{ show('secInsights'); renderInsights(); });
+  bind('btnBackDash','click', ()=> show('secDash'));
+  bind('btnRefresh','click', ()=> tickOnce());
+});
+
+// ===== Demo data =====
+function demoRows(){
+  const now=Date.now();
+  const mk = i=>({
+    'Timestamp (Asia/Bangkok)': new Date(now - i*60000).toISOString(),
+    'AirTemp_C': +(25+Math.sin(i/6)*2).toFixed(1),
+    'AirHumid_%RH': 55+((i*7)%10),
+    'SoilMoist_%': 40+((i*5)%20),
+    'Light_%': 60+((i*3)%20),
+    'PM2.5 (µg/m³)': 22+((i*13)%40),
+    'UV Index': (i%12)
+  });
+  return Array.from({length:50},(_,i)=>mk(i));
+}
+function demoScores(){
+  const now=Date.now();
+  const mk = i=>({
+    'Timestamp': new Date(now - i*3600000).toISOString(),
+    'Score': 5 + Math.round(Math.sin(i/3)*3),
+    'Advice': 'รดน้ำเล็กน้อย/ตรวจแสง'
+  });
+  return Array.from({length:20},(_,i)=>mk(i));
+}
+
+// ===== Dashboard polling =====
+async function pack(url, team, limit){
+  if(url.startsWith('demo://')){
+    return { data: demoRows(), score: demoScores() };
+  }
+  const dataUrl = buildURL(url,{action:'data',team,limit});
+  const scoreUrl= buildURL(url,{action:'score',team});
+  const anaUrl  = buildURL(url,{action:'analyzeNow',team});
+  const [dRes,_,sRes] = await Promise.allSettled([ getJSON(dataUrl), fetch(anaUrl), getJSON(scoreUrl) ]);
+  return {
+    data: dRes.status==='fulfilled' ? (dRes.value.rows||[]) : [],
+    score: sRes.status==='fulfilled'? (sRes.value.rows||[]) : []
+  };
+}
+
+async function renderTeam(url,team,prefix){
+  try{
+    const {data,score} = await pack(url,team,ctx.limit);
+    ctx.cache[team]={data,score};
+
+    if(data.length){
+      const r=data[0];
+      const tC=safeNum(pick(r,COLS.tC)), rh=safeNum(pick(r,COLS.rh)), soil=safeNum(pick(r,COLS.soil)), li=safeNum(pick(r,COLS.light));
+      byId(prefix+'temp') && (byId(prefix+'temp').textContent = tC!=null? tC.toFixed(1):'-');
+      byId(prefix+'hum') && (byId(prefix+'hum').textContent = rh!=null? rh:'-');
+      byId(prefix+'soil') && (byId(prefix+'soil').textContent= soil!=null? soil:'-');
+      byId(prefix+'light') && (byId(prefix+'light').textContent= li!=null? li:'-');
+      const tb=byId(prefix+'tbl'); if(tb){ tb.innerHTML='';
+        data.slice(0,ctx.limit).forEach(o=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML=`<td>${fmtTime(pick(o,COLS.ts))}</td>
+                        <td style="text-align:center">${pick(o,COLS.tC)??'-'}</td>
+                        <td style="text-align:center">${pick(o,COLS.rh)??'-'}</td>
+                        <td style="text-align:center">${pick(o,COLS.soil)??'-'}</td>
+                        <td style="text-align:center">${pick(o,COLS.light)??'-'}</td>`;
           tb.appendChild(tr);
         });
       }
-
-      // Score & advice
-      if(scores.length){
-        const sRow  = scores[0];
-        let score = safeNum(pickRowValue(sRow, SCORE.score));
-        // ถ้าเป็นสเกล 0–5 ให้คูณสองเพื่อแม็พหัวใจ 1–10
-        if(score!=null && score<=5) score = score*2;
-        const adv   = pickRowValue(sRow, SCORE.advice);
-        $('#'+prefix+'hearts').textContent = hearts(score);
-        $('#'+prefix+'advice').textContent = adv ? ('คำแนะนำ: '+adv) : '—';
-      }else{
-        $('#'+prefix+'hearts').textContent = '—';
-        $('#'+prefix+'advice').textContent = '—';
-      }
-    }catch(e){
-      $('#'+prefix+'hearts').textContent = '—';
-      $('#'+prefix+'advice').textContent = 'เชื่อมต่อไม่ได้ • ตรวจสอบ Web App/สิทธิ์การเข้าถึง';
     }
-  }
 
-  const cycle = async ()=>{
-    await Promise.all([
-      render(urlA, 'A', 'a_'),
-      render(urlB, 'B', 'b_')
-    ]);
-  };
-  await cycle();
-  setInterval(cycle, 20000);
+    if(score.length){
+      let scA = safeNum(pick(score[0],SCORE.score))||0;
+      if(scA<=5) scA=scA*2;
+      byId(prefix+'hearts') && (byId(prefix+'hearts').textContent=hearts(scA));
+      byId(prefix+'advice') && (byId(prefix+'advice').textContent= pick(score[0],SCORE.advice)?('คำแนะนำ: '+pick(score[0],SCORE.advice)):'—');
+    }else{
+      byId(prefix+'hearts') && (byId(prefix+'hearts').textContent='—');
+      byId(prefix+'advice') && (byId(prefix+'advice').textContent='—');
+    }
+  }catch(e){
+    byId(prefix+'hearts') && (byId(prefix+'hearts').textContent='—');
+    byId(prefix+'advice') && (byId(prefix+'advice').textContent='ติดต่อข้อมูลไม่สำเร็จ');
+  }
 }
+
+async function tickOnce(){
+  await Promise.all([
+    renderTeam(ctx.urlA,'A','a_'),
+    renderTeam(ctx.urlB,'B','b_')
+  ]);
+}
+
+let timer=null;
+async function startDashboard(){
+  await tickOnce();
+  if(timer) clearInterval(timer);
+  timer = setInterval(()=>{ tickOnce(); }, ctx.interval||20000);
+}
+
+// ===== Insights page =====
+let heartChart=null;
+function renderInsights(){
+  const A = (ctx.cache.A.score||[]).map(o=>({ts:pick(o,SCORE.ts), s:+(pick(o,SCORE.score)||0)})).slice(0,30).reverse();
+  const B = (ctx.cache.B.score||[]).map(o=>({ts:pick(o,SCORE.ts), s:+(pick(o,SCORE.score)||0)})).slice(0,30).reverse();
+  const labels = (A.length?A:B).map(x=> (x.ts? new Date(x.ts).toLocaleTimeString('th-TH',{timeZone:tz,hour:'2-digit',minute:'2-digit'}):'' ));
+  const dataA = A.map(x=> x.s<=5? x.s*2: x.s);
+  const dataB = B.map(x=> x.s<=5? x.s*2: x.s);
+
+  const canvas = byId('chartHearts'); if(!canvas) return;
+  const ctx2 = canvas.getContext('2d');
+  if(heartChart) heartChart.destroy();
+  heartChart = new Chart(ctx2,{
+    type:'line',
+    data:{ labels,
+      datasets:[
+        {label:'ทีม A', data:dataA, tension:.25, pointRadius:2, borderWidth:2, fill:false},
+        {label:'ทีม B', data:dataB, tension:.25, pointRadius:2, borderWidth:2, fill:false}
+      ]
+    },
+    options:{
+      responsive:true,
+      scales:{ y:{ suggestedMin:0, suggestedMax:10, ticks:{ stepSize:1 } } },
+      plugins:{ legend:{display:true}, tooltip:{enabled:true} }
+    }
+  });
+
+  byId('healthA') && (byId('healthA').innerHTML = healthHTML(latestEnv('A')));
+  byId('healthB') && (byId('healthB').innerHTML = healthHTML(latestEnv('B')));
+  byId('dailyTable') && (byId('dailyTable').innerHTML  = tableSummary(avgBy('day')));
+  byId('weeklyTable') && (byId('weeklyTable').innerHTML = tableSummary(avgBy('week')));
+}
+function latestEnv(team){
+  const rows = (team==='A'?ctx.cache.A.data:ctx.cache.B.data);
+  if(!rows || !rows.length) return null;
+  const r=rows[0];
+  return {
+    ts: pick(r,COLS.ts),
+    tC: safeNum(pick(r,COLS.tC)),
+    rh: safeNum(pick(r,COLS.rh)),
+    pm25: safeNum(pick(r,COLS.pm25)),
+    uv: safeNum(pick(r,COLS.uv))
+  };
+}
+function pm25Cat(v){
+  if(v==null) return {cat:'—', tip:'ไม่มีข้อมูล PM2.5'};
+  if(v<=25)  return {cat:'ดีมาก',   tip:'อากาศดี ออกกำลังกายกลางแจ้งได้'};
+  if(v<=37)  return {cat:'ดี',      tip:'ทำกิจกรรมกลางแจ้งได้ตามปกติ'};
+  if(v<=50)  return {cat:'ปานกลาง',tip:'ผู้ป่วยโรคทางเดินหายใจควรลดกิจกรรมหนัก'};
+  if(v<=90)  return {cat:'เริ่มมีผล',tip:'สวมหน้ากากเมื่อต้องอยู่นอกอาคารนาน'};
+  return {cat:'มีผลกระทบ',tip:'ควรสวมหน้ากาก/อยู่ในอาคารที่มีการกรองอากาศ'};
+}
+function uvTip(u){
+  if(u==null) return 'ไม่มีข้อมูล UV';
+  if(u<3)  return 'UV ต่ำ — ปลอดภัยโดยทั่วไป';
+  if(u<6)  return 'UV ปานกลาง — ทาครีมกันแดดเมื่ออยู่นอกอาคาร';
+  if(u<8)  return 'UV สูง — หาหมวก/แว่นกันแดด';
+  if(u<11) return 'UV สูงมาก — เลี่ยงกลางแจ้งช่วงเที่ยง';
+  return 'UV อันตราย — จำกัดเวลาโดนแดดให้สั้นที่สุด';
+}
+function healthHTML(env){
+  if(!env) return '—';
+  const pm = pm25Cat(env.pm25);
+  const humidTip = env.rh!=null? (env.rh<40?'อากาศแห้ง — เติมความชื้น': env.rh>70?'อับชื้น — เพิ่มการถ่ายเท':'ความชื้นเหมาะสม'):'ไม่มีข้อมูลความชื้น';
+  const tempTip  = env.tC!=null? (env.tC<22?'ค่อนข้างเย็น — เลี่ยงลมเย็นจัด': env.tC>30?'ค่อนข้างร้อน — ระบายอากาศ':'อุณหภูมิเหมาะสม'):'ไม่มีข้อมูลอุณหภูมิ';
+  return `
+    <div class="chips">
+      <span class="chip">เวลา: ${fmtTime(env.ts)}</span>
+      <span class="chip">PM2.5: ${env.pm25??'—'} µg/m³ (${pm.cat})</span>
+      <span class="chip">RH: ${env.rh??'—'}%</span>
+      <span class="chip">Temp: ${env.tC??'—'}°C</span>
+      <span class="chip">UV: ${env.uv??'—'}</span>
+    </div>
+    <div style="margin-top:8px">
+      <div>คำแนะนำด้านสุขภาพ:</div>
+      <ul style="margin:6px 0 0 18px">
+        <li>${pm.tip}</li>
+        <li>${humidTip}</li>
+        <li>${tempTip}</li>
+        <li>${uvTip(env.uv)}</li>
+      </ul>
+    </div>
+  `;
+}
+function avgBy(kind){
+  const coll = (rows)=> (rows||[]).map(o=>({d: kind==='day'? fmtDate(pick(o,SCORE.ts)): weekKey(pick(o,SCORE.ts)), s: +(pick(o,SCORE.score)||0)}));
+  const A = coll(ctx.cache.A.score), B = coll(ctx.cache.B.score);
+  const agg = (arr)=> arr.reduce((m,x)=>{ const k=x.d; const v=x.s<=5?x.s*2:x.s; (m[k]??=[]).push(v); return m; },{});
+  const avg = (obj)=> Object.entries(obj).map(([d,vals])=>({date:d, avg: +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)})).sort((a,b)=> a.date.localeCompare(b.date));
+  return { A: avg(agg(A)), B: avg(agg(B)) };
+}
+function weekKey(iso){ if(!iso) return '-'; const d=new Date(iso); const y=d.getFullYear(); const firstDay = new Date(y,0,1); const days = Math.floor((d-firstDay)/86400000)+firstDay.getDay()+1; const w = Math.floor(days/7); return `${y}-W${('0'+w).slice(-2)}`; }
+function tableSummary(obj){
+  const rows=[];
+  const keys = Array.from(new Set([...(obj.A||[]).map(x=>x.date), ...(obj.B||[]).map(x=>x.date)])).sort();
+  rows.push(`<table><thead><tr><th style="text-align:left">ช่วงเวลา</th><th>ทีม A</th><th>ทีม B</th></tr></thead><tbody>`);
+  keys.forEach(k=>{
+    const a = (obj.A||[]).find(x=>x.date===k)?.avg ?? '-';
+    const b = (obj.B||[]).find(x=>x.date===k)?.avg ?? '-';
+    rows.push(`<tr><td>${k}</td><td style="text-align:center">${a}</td><td style="text-align:center">${b}</td></tr>`);
+  });
+  rows.push(`</tbody></table>`);
+  return rows.join('');
+}
+
+// ===== Self-tests (dev) =====
+function runSelfTests(){
+  console.group('%cGreenSync self-test','color:#10b981;font-weight:bold');
+  // Test 1: required IDs exist
+  const mustHave = ['nowTH','theme','navDash','secDash','chartHearts','a_tbl','b_tbl','btnStart'];
+  const missing = mustHave.filter(id=>!byId(id));
+  console.log('Required IDs:', mustHave);
+  console.log('Missing:', missing);
+  console.assert(missing.length===0, 'Some required elements are missing:', missing);
+  // Test 2: helpers do not throw when element missing
+  try{ setTextSafe('___not_exist___','x'); console.log('setTextSafe OK'); }catch(e){ console.error('setTextSafe threw', e); }
+  // Test 3: hearts mapping
+  console.assert(hearts(0)==='—', 'hearts(0) should be dash');
+  console.assert(hearts(1).length>=1 && hearts(1).length<=10, 'hearts(1..10) length OK');
+  console.groupEnd();
+}
+onReady(runSelfTests);
 </script>
 </body>
 </html>
