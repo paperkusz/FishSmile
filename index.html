@@ -1,137 +1,633 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>FishSmile Dashboard (Online)</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>🌿 GreenSync Duel — Form → Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-  body{margin:0;background:linear-gradient(135deg,#1A1A2E,#162447,#0F3460);color:#F8F9FA;font-family:Segoe UI,Arial,sans-serif}
-  .wrap{max-width:1100px;margin:0 auto;padding:20px}
-  .header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px;background:rgba(26,26,46,.7);border-radius:16px;border:1px solid rgba(255,255,255,.1)}
-  .title h1{margin:0;font-size:22px;background:linear-gradient(135deg,#FF3E8A,#8A2BE2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:18px}
-  .card{background:rgba(255,255,255,.9);color:#162447;border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.25)}
-  .label{font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:.06em}
-  .val{font-size:30px;margin:4px 0 10px 0}
-  .row{display:flex;gap:8px;justify-content:space-between}
-  .pill{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid}
-  .raw{background:rgba(0,212,255,.18);color:#005c9e;border-color:#00a9e0}
-  .ok{background:rgba(0,255,136,.18);color:#00663a;border-color:#00c46a}
-  .warn{background:rgba(255,215,0,.23);color:#6a5200;border-color:#ffb700}
-  .bad{background:rgba(255,56,96,.18);color:#7a0026;border-color:#ff4d5e}
-  .card.history{background:rgba(20,27,45,.95);color:#fff}
-  .card.history .label{color:#fff}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px}
-  thead th{position:sticky;top:0;background:rgba(0,0,0,.2)}
-  .controls{display:flex;gap:8px;align-items:center}
-  .footer{margin-top:16px;padding:14px;background:rgba(26,26,46,.7);border-radius:12px;border:1px solid rgba(255,255,255,.1)}
+  :root{
+    --bg:#f5f7fa;--text:#1f2430;--muted:#667085;--card:#fff;--border:#e5e7eb;
+    --primary:#10b981;--primary-light:#d1fae5;--primary-dark:#047857;
+    --secondary:#8b5cf6;--accent:#f59e0b;
+    --theme-name: 'ธีมปกติ'; --theme-emoji: '🌿';
+  }
+
+  /* ธีมเด็ก */
+  .theme-kid{
+    --bg:#e0f7fa;--text:#01579b;--muted:#4dd0e1;--card:#fff;--border:#b2ebf2;
+    --primary:#00bcd4;--primary-light:#b2ebf2;--primary-dark:#00838f;
+    --secondary:#ff4081;--accent:#ffc107;
+    --theme-name: 'ธีมเด็ก'; --theme-emoji: '🧸';
+  }
+
+  /* ธีมวัยรุ่น */
+  .theme-teen{
+    --bg:#f3e5f5;--text:#4a148c;--muted:#8e24aa;--card:#fff;--border:#e1bee7;
+    --primary:#9c27b0;--primary-light:#e1bee7;--primary-dark:#6a1b9a;
+    --secondary:#ff9800;--accent:#4caf50;
+    --theme-name: 'ธีมวัยรุ่น'; --theme-emoji: '🛹';
+  }
+
+  /* ธีมผู้ใหญ่ */
+  .theme-adult{
+    --bg:#f5f5f5;--text:#212121;--muted:#757575;--card:#fff;--border:#e0e0e0;
+    --primary:#455a64;--primary-light:#cfd8dc;--primary-dark:#263238;
+    --secondary:#607d8b;--accent:#ff5722;
+    --theme-name: 'ธีมผู้ใหญ่'; --theme-emoji: '💼';
+  }
+
+  /* ธีมตรุษจีน */
+  .theme-cny{
+    --bg:#fff9f9;--text:#b71c1c;--muted:#d32f2f;--card:#fff;--border:#ffcdd2;
+    --primary:#d32f2f;--primary-light:#ffcdd2;--primary-dark:#b71c1c;
+    --secondary:#ffc107;--accent:#4caf50;
+    --theme-name: 'ธีมตรุษจีน'; --theme-emoji: '🐉';
+  }
+
+  /* ธีมวาเลนไทน์ */
+  .theme-valentine{
+    --bg:#fff5f7;--text:#880e4f;--muted:#ad1457;--card:#fff;--border:#f8bbd9;
+    --primary:#e91e63;--primary-light:#f8bbd9;--primary-dark:#ad1457;
+    --secondary:#ec407a;--accent:#ab47bc;
+    --theme-name: 'ธีมวาเลนไทน์'; --theme-emoji: '💝';
+  }
+
+  /* ธีมปีใหม่ */
+  .theme-newyear{
+    --bg:#f0f8ff;--text:#0d47a1;--muted:#1565c0;--card:#fff;--border:#bbdefb;
+    --primary:#0d47a1;--primary-light:#bbdefb;--primary-dark:#002171;
+    --secondary:#ff6d00;--accent:#00c853;
+    --theme-name: 'ธีมปีใหม่'; --theme-emoji: '🎉';
+  }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter,"Noto Sans Thai",system-ui;
+    transition: all 0.3s ease;
+  }
+  .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+  .h1{font-weight:700;font-size:28px}
+  .muted{color:var(--muted)}
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:0 6px 18px rgba(0,0,0,.06);
+    margin-bottom:16px;
+    transition: all 0.3s ease;
+  }
+  .hd{
+    padding:14px 16px;
+    border-bottom:1px solid var(--border);
+    font-weight:600;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    transition: all 0.3s ease;
+  }
+  .bd{padding:14px 16px}
+  label{display:block;margin-bottom:6px;font-size:14px}
+  input,select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    transition: all 0.2s ease;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+  }
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .btn{
+    display:inline-flex;
+    gap:8px;
+    align-items:center;
+    border-radius:999px;
+    padding:10px 16px;
+    border:1px solid var(--primary);
+    background:var(--primary);
+    color:#fff;
+    cursor:pointer;
+    font-weight:600;
+    transition: all 0.2s ease;
+  }
+  .btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.row{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+  .kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .kpi .it{
+    background:#f8fafc;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:8px 10px;
+    transition: all 0.2s ease;
+  }
+  .kpi .it:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  }
+  .kpi .v{font-weight:700}
+  .hearts{font-size:28px;line-height:1.1;color:#e91e63}
+
+  /* ส่วนหัวธีม */
+  .theme-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+  }
+
+  .theme-selector {
+    position: relative;
+    display: inline-block;
+  }
+
+  .theme-main-btn {
+    padding: 10px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .theme-main-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .theme-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    padding: 8px;
+    min-width: 180px;
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .theme-dropdown.show {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .theme-option {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+  }
+
+  .theme-option:hover {
+    background: var(--primary-light);
+  }
+
+  .theme-option.active {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: 600;
+  }
+
+  .theme-emoji {
+    font-size: 18px;
+  }
+
+  .theme-name {
+    flex: 1;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* เอฟเฟกต์พิเศษสำหรับธีมต่างๆ */
+  .theme-kid .card {
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 188, 212, 0.15);
+  }
+
+  .theme-kid .kpi .it {
+    border-radius: 16px;
+    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+  }
+
+  .theme-teen .card {
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(156, 39, 176, 0.15);
+  }
+
+  .theme-teen .kpi .it {
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  }
+
+  .theme-adult .card {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .theme-adult .kpi .it {
+    border-radius: 6px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  }
+
+  .theme-cny .card {
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(211, 47, 47, 0.15);
+    border: 2px solid var(--primary);
+  }
+
+  .theme-cny .kpi .it {
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fff9f9 0%, #ffcdd2 100%);
+  }
+
+  .theme-valentine .card {
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(233, 30, 99, 0.15);
+    border: 2px dashed var(--primary);
+  }
+
+  .theme-valentine .kpi .it {
+    border-radius: 16px;
+    background: linear-gradient(135deg, #fff5f7 0%, #f8bbd9 100%);
+  }
+
+  .theme-newyear .card {
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(13, 71, 161, 0.15);
+    border: 2px dotted var(--primary);
+  }
+
+  .theme-newyear .kpi .it {
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f0f8ff 0%, #bbdefb 100%);
+  }
+
+  @media (max-width:900px){ 
+    .theme-header {
+      flex-direction: column;
+      gap: 16px;
+    }
+    .theme-selector {
+      width: 100%;
+    }
+    .theme-main-btn {
+      width: 100%;
+      justify-content: center;
+    }
+    .theme-dropdown {
+      width: 100%;
+      right: auto;
+      left: 0;
+    }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="header">
-    <div class="title"><h1>Fish-Smile Dashboard (Online)</h1></div>
-    <div class="controls">
-      แถว:
-      <select id="limit">
-        <option>10</option><option>20</option><option>30</option><option>40</option><option>50</option>
-      </select>
-      <button id="refresh">รีเฟรช</button>
-      <a id="csv" class="pill raw" href="?export=csv" target="_blank" style="text-decoration:none">ดาวน์โหลด CSV</a>
+  <!-- ส่วนหัวธีม -->
+  <div class="theme-header">
+    <div>
+      <div class="h1"><span id="theme-emoji">🌿</span> GreenSync — Duel Mode</div>
+      <div class="muted">กรอกโปรไฟล์ → เริ่มแข่งขัน → แดชบอร์ด 2 กระถาง พร้อมคะแนนเป็นรูปหัวใจ</div>
+      <div class="muted" style="margin-top: 8px;">ธีมปัจจุบัน: <span id="current-theme">ธีมปกติ</span></div>
     </div>
-  </div>
-
-  <div class="grid">
-    <div class="card">
-      <div class="label">Soil 1</div>
-      <div class="val" id="soil1">—</div>
-      <div class="row"><div class="pill raw" id="soil1raw">RAW: —</div><div class="pill ok" id="soil1st">—</div></div>
-    </div>
-
-    <div class="card">
-      <div class="label">Soil 2</div>
-      <div class="val" id="soil2">—</div>
-      <div class="row"><div class="pill raw" id="soil2raw">RAW: —</div><div class="pill ok" id="soil2st">—</div></div>
-    </div>
-
-    <div class="card">
-      <div class="label">Air</div>
-      <div class="val" id="humid">—</div>
-      <div class="row"><div class="pill raw" id="temp">Temp: —</div><div class="pill ok" id="onl">ONLINE</div></div>
-    </div>
-
-    <div class="card">
-      <div class="label">Last</div>
-      <div class="val" id="time">—</div>
-      <div class="row"><div class="pill raw" id="seq">SEQ: —</div><div class="pill raw" id="mac">MAC: —</div></div>
-    </div>
-
-    <div class="card history">
-      <div class="label">ประวัติล่าสุด</div>
-      <div id="msg" style="margin:6px 0 10px 0; font-size:12px; opacity:.85;"></div>
-      <div style="max-height:360px;overflow:auto;border:1px solid rgba(255,255,255,.2);border-radius:10px">
-        <table><thead id="th"></thead><tbody id="tb"></tbody></table>
+    <div class="theme-selector">
+      <button class="theme-main-btn" id="themeMainBtn">
+        <i class="fas fa-palette"></i>
+        <span>เปลี่ยนธีม</span>
+        <i class="fas fa-chevron-down"></i>
+      </button>
+      <div class="theme-dropdown" id="themeDropdown">
+        <div class="theme-option active" data-theme="default">
+          <span class="theme-emoji">🌿</span>
+          <span class="theme-name">ธีมปกติ</span>
+        </div>
+        <div class="theme-option" data-theme="kid">
+          <span class="theme-emoji">🧸</span>
+          <span class="theme-name">ธีมเด็ก</span>
+        </div>
+        <div class="theme-option" data-theme="teen">
+          <span class="theme-emoji">🛹</span>
+          <span class="theme-name">ธีมวัยรุ่น</span>
+        </div>
+        <div class="theme-option" data-theme="adult">
+          <span class="theme-emoji">💼</span>
+          <span class="theme-name">ธีมผู้ใหญ่</span>
+        </div>
+        <div class="theme-option" data-theme="cny">
+          <span class="theme-emoji">🐉</span>
+          <span class="theme-name">ธีมตรุษจีน</span>
+        </div>
+        <div class="theme-option" data-theme="valentine">
+          <span class="theme-emoji">💝</span>
+          <span class="theme-name">ธีมวาเลนไทน์</span>
+        </div>
+        <div class="theme-option" data-theme="newyear">
+          <span class="theme-emoji">🎉</span>
+          <span class="theme-name">ธีมปีใหม่</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="footer">หน้าเว็บนี้โฮสต์อยู่บน Apps Script — เปิดได้จากทุกที่ที่มีอินเทอร์เน็ต</div>
+  <!-- SECTION 1: FORM -->
+  <div class="card" id="secForm">
+    <div class="hd">โปรไฟล์ & การเชื่อมต่อ</div>
+    <div class="bd">
+      <div class="row">
+        <div>
+          <label>Web App URL (Apps Script)</label>
+          <input id="webapp" placeholder="https://script.google.com/macros/s/DEPLOYMENT_ID/exec">
+        </div>
+        <div>
+          <label>จำนวนแถวดึงแสดง (limit)</label>
+          <select id="limit"><option>10</option><option selected>50</option><option>100</option></select>
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div>
+          <label>ชื่อพันธุ์ต้นไม้</label>
+          <input id="plant" placeholder="เช่น ยางอินเดีย / มอนสเตอร่า">
+        </div>
+        <div>
+          <label>ขนาดพื้นที่ปลูก</label>
+          <input id="size" placeholder="เช่น 2 x 3 เมตร">
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div>
+          <label>แสง</label>
+          <select id="lightCond"><option>พอมาก</option><option selected>พอประมาณ</option><option>น้อย/อับแสง</option></select>
+        </div>
+        <div>
+          <label>การถ่ายเทอากาศ</label>
+          <select id="airflow"><option>โปร่ง</option><option selected>พอใช้</option><option>อับ</option></select>
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div>
+          <label>แอร์</label>
+          <select id="ac"><option>ตลอดวัน</option><option selected>บางเวลา</option><option>ไม่เปิด</option></select>
+        </div>
+        <div>
+          <label>ชื่อผู้ปลูก (ทีม A / ทีม B จะใช้โปรไฟล์เดียว)</label>
+          <input id="name" placeholder="เช่น ครูรัชพล">
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn" id="btnStart">เริ่มแข่งขัน ➜ เปิดแดชบอร์ด</button>
+        <span class="muted" id="status"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: DASHBOARD -->
+  <div class="card" id="secDash" style="display:none">
+    <div class="hd">แดชบอร์ด 2 กระถาง (ทีม A vs ทีม B)</div>
+    <div class="bd grid2">
+      <!-- LEFT -->
+      <div>
+        <div class="muted">ทีม A</div>
+        <div class="kpi" style="margin-top:8px">
+          <div class="it"><div>Temp (°C)</div><div class="v" id="a_temp">-</div></div>
+          <div class="it"><div>Humid (%)</div><div class="v" id="a_hum">-</div></div>
+          <div class="it"><div>Soil (%)</div><div class="v" id="a_soil">-</div></div>
+          <div class="it"><div>Light (%)</div><div class="v" id="a_light">-</div></div>
+        </div>
+        <div style="margin-top:8px">หัวใจวันนี้:</div>
+        <div class="hearts" id="a_hearts">—</div>
+        <div class="muted" id="a_advice" style="margin-top:6px">—</div>
+        <table style="margin-top:10px;width:100%;border-collapse:collapse">
+          <thead><tr><th style="text-align:left">เวลา</th><th>Temp</th><th>RH</th><th>Soil</th><th>Light</th></tr></thead>
+          <tbody id="a_tbl"></tbody>
+        </table>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="muted">ทีม B</div>
+        <div class="kpi" style="margin-top:8px">
+          <div class="it"><div>Temp (°C)</div><div class="v" id="b_temp">-</div></div>
+          <div class="it"><div>Humid (%)</div><div class="v" id="b_hum">-</div></div>
+          <div class="it"><div>Soil (%)</div><div class="v" id="b_soil">-</div></div>
+          <div class="it"><div>Light (%)</div><div class="v" id="b_light">-</div></div>
+        </div>
+        <div style="margin-top:8px">หัวใจวันนี้:</div>
+        <div class="hearts" id="b_hearts">—</div>
+        <div class="muted" id="b_advice" style="margin-top:6px">—</div>
+        <table style="margin-top:10px;width:100%;border-collapse:collapse">
+          <thead><tr><th style="text-align:left">เวลา</th><th>Temp</th><th>RH</th><th>Soil</th><th>Light</th></tr></thead>
+          <tbody id="b_tbl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-const qs   = new URL(location.href).searchParams;
-const base = location.href.split('?')[0]; // base ของสคริปต์นี้เอง
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const fmt = v => (v==null||v==="")?"-":v;
+const hearts = n => n>0? "❤".repeat(Math.max(1,Math.min(10,Math.round(n)))) : "—";
 
-function badge(el, cls, txt){ el.className='pill '+cls; el.textContent=txt; }
-
-async function loadHistory(limit=10){
-  const url= base+'?export=json&limit='+encodeURIComponent(limit);
-  const r  = await fetch(url,{cache:'no-store'});
-  const j  = await r.json();
-  const th = document.getElementById('th');
-  const tb = document.getElementById('tb');
-  const msg= document.getElementById('msg');
-
-  if(!j.ok){ th.innerHTML=''; tb.innerHTML=''; msg.textContent='โหลดผิดพลาด: '+(j.error||''); return; }
-  const hs=j.headers, rows=j.rows||[];
-  if(!hs || rows.length===0){ th.innerHTML=''; tb.innerHTML=''; msg.textContent='ยังไม่มีข้อมูล'; return; }
-
-  // table header
-  let H='<tr>'; hs.forEach(h=>H+='<th>'+h+'</th>'); H+='</tr>'; th.innerHTML=H;
-
-  // latest (ท้ายสุดของ rows) + เติม table
-  let T=''; const last = rows[rows.length-1];
-  rows.slice().reverse().forEach(row=>{
-    T+='<tr>'; hs.forEach(h=>{ let v=row[h]; T+='<td>'+(v==null?'':String(v))+'</td>'; }); T+='</tr>';
-  });
-  tb.innerHTML=T;
-
-  // fill latest cards
-  if(last){
-    const v = (k)=> last[k];
-    document.getElementById('soil1').textContent = (v('Soil1 %')!=null ? Number(v('Soil1 %')).toFixed(1)+' %' : '—');
-    document.getElementById('soil2').textContent = (v('Soil2 %')!=null ? Number(v('Soil2 %')).toFixed(1)+' %' : '—');
-    document.getElementById('soil1raw').textContent='RAW: '+(v('Soil1 RAW') ?? '—');
-    document.getElementById('soil2raw').textContent='RAW: '+(v('Soil2 RAW') ?? '—');
-    const s1=Number(v('Soil1 %')||NaN), s2=Number(v('Soil2 %')||NaN);
-    badge(document.getElementById('soil1st'), (!isNaN(s1)? (s1<20?'bad':(s1<40?'warn':'ok')):'ok'), (!isNaN(s1)? (s1<20?'แห้งมาก':(s1<40?'เริ่มแห้ง':'ชุ่มดี')):'—'));
-    badge(document.getElementById('soil2st'), (!isNaN(s2)? (s2<20?'bad':(s2<40?'warn':'ok')):'ok'), (!isNaN(s2)? (s2<20?'แห้งมาก':(s2<40?'เริ่มแห้ง':'ชุ่มดี')):'—'));
-    document.getElementById('humid').textContent = (v('Humid %')!=null ? Number(v('Humid %')).toFixed(1)+' %RH' : '—');
-    document.getElementById('temp').textContent  = 'Temp: '+(v('Temp C')!=null ? Number(v('Temp C')).toFixed(1)+' °C' : '—');
-    document.getElementById('time').textContent  = v('Timestamp (Asia/Bangkok)') || '—';
-    document.getElementById('seq').textContent   = 'SEQ: '+(v('Seq') ?? '—');
-    document.getElementById('mac').textContent   = 'MAC: '+(v('Sender MAC') ?? '—');
-    badge(document.getElementById('onl'),'ok','ONLINE');
+/* --------------- Theme Management --------------- */
+function setTheme(themeName) {
+  // ลบคลาสธีมทั้งหมด
+  document.body.classList.remove('theme-kid', 'theme-teen', 'theme-adult', 'theme-cny', 'theme-valentine', 'theme-newyear');
+  
+  // เพิ่มคลาสธีมใหม่ถ้าไม่ใช่ธีมปกติ
+  if (themeName !== 'default') {
+    document.body.classList.add(`theme-${themeName}`);
   }
-  msg.textContent = 'แสดง '+rows.length+' แถว • อัปเดตล่าสุด: '+new Date().toLocaleTimeString('th-TH',{hour12:false});
+  
+  // อัพเดทปุ่มธีม
+  $$('.theme-option').forEach(option => {
+    option.classList.remove('active');
+    if (option.dataset.theme === themeName) {
+      option.classList.add('active');
+    }
+  });
+  
+  // อัพเดทข้อความธีมปัจจุบันและอีโมจิ
+  $('#current-theme').textContent = getThemeName(themeName);
+  $('#theme-emoji').textContent = getThemeEmoji(themeName);
+  
+  // ปิด dropdown
+  $('#themeDropdown').classList.remove('show');
+  
+  // บันทึกธีมที่เลือก
+  localStorage.setItem('selectedTheme', themeName);
 }
 
-document.getElementById('refresh').onclick = ()=> loadHistory(Number(document.getElementById('limit').value)||10);
+function getThemeName(themeKey) {
+  const themeNames = {
+    'default': 'ธีมปกติ',
+    'kid': 'ธีมเด็ก',
+    'teen': 'ธีมวัยรุ่น',
+    'adult': 'ธีมผู้ใหญ่',
+    'cny': 'ธีมตรุษจีน',
+    'valentine': 'ธีมวาเลนไทน์',
+    'newyear': 'ธีมปีใหม่'
+  };
+  return themeNames[themeKey] || 'ธีมปกติ';
+}
 
-// โหลดครั้งแรก + อัปเดตทุก 5 วิ
-loadHistory(10);
-setInterval(()=>loadHistory(Number(document.getElementById('limit').value)||10), 5000);
+function getThemeEmoji(themeKey) {
+  const themeEmojis = {
+    'default': '🌿',
+    'kid': '🧸',
+    'teen': '🛹',
+    'adult': '💼',
+    'cny': '🐉',
+    'valentine': '💝',
+    'newyear': '🎉'
+  };
+  return themeEmojis[themeKey] || '🌿';
+}
+
+// โหลดธีมที่บันทึกไว้
+const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+setTheme(savedTheme);
+
+// เพิ่ม event listener สำหรับปุ่มธีมหลัก
+$('#themeMainBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  $('#themeDropdown').classList.toggle('show');
+});
+
+// เพิ่ม event listener สำหรับตัวเลือกธีม
+$$('.theme-option').forEach(option => {
+  option.addEventListener('click', () => {
+    setTheme(option.dataset.theme);
+  });
+});
+
+// ปิด dropdown เมื่อคลิกที่อื่น
+document.addEventListener('click', () => {
+  $('#themeDropdown').classList.remove('show');
+});
+
+// 1) เริ่มแข่งขัน: บันทึกโปรไฟล์ทีม A/B แล้วสลับไปแดชบอร์ด
+$("#btnStart").addEventListener("click", async ()=>{
+  const base = $("#webapp").value.trim();
+  if(!base){ $("#status").textContent="กรุณาใส่ Web App URL (ลงท้าย /exec)"; return; }
+  const pf = {
+    action:"saveProfile",
+    name: $("#name").value.trim(),
+    plant: $("#plant").value.trim(),
+    size: $("#size").value.trim(),
+    light: $("#lightCond").value,
+    airflow: $("#airflow").value,
+    ac: $("#ac").value
+  };
+  $("#status").textContent="กำลังบันทึกโปรไฟล์ทีม A/B...";
+
+  await fetch(base, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...pf, team:"A"})});
+  await fetch(base, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...pf, team:"B"})});
+
+  // เปิดแดชบอร์ด
+  $("#secForm").style.display="none";
+  $("#secDash").style.display="block";
+
+  // เริ่มโหลดข้อมูล + สั่ง AI วิเคราะห์ทันที
+  startDashboard(base, Number($("#limit").value || 50));
+});
+
+async function startDashboard(base, limit){
+  async function fetchData(team){
+    // ดึงข้อมูลวัด
+    const dataUrl = new URL(base);
+    dataUrl.searchParams.set("action","data");
+    dataUrl.searchParams.set("team",team);
+    dataUrl.searchParams.set("limit",limit);
+    const dj = await (await fetch(dataUrl)).json().catch(()=>({rows:[]}));
+    // สั่งวิเคราะห์ทันที (จะบันทึกลงชีต AI_PlantScore)
+    const anaUrl = new URL(base);
+    anaUrl.searchParams.set("action","analyzeNow");
+    anaUrl.searchParams.set("team",team);
+    await fetch(anaUrl).catch(()=>{});
+    // อ่านคะแนนล่าสุด
+    const scoreUrl = new URL(base);
+    scoreUrl.searchParams.set("action","score");
+    scoreUrl.searchParams.set("team",team);
+    const sj = await (await fetch(scoreUrl)).json().catch(()=>({rows:[]}));
+    return {rows: dj.rows||[], scores: sj.rows||[]};
+  }
+
+  async function render(team, prefix){
+    const {rows, scores} = await fetchData(team);
+
+    // KPI จากแถวล่าสุด
+    if(rows.length){
+      const r = rows[0];
+      $("#"+prefix+"temp").textContent = fmt(Number(r["Temperature (°C)"]).toFixed(1));
+      $("#"+prefix+"hum").textContent  = fmt(r["Air Humidity (%)"]);
+      $("#"+prefix+"soil").textContent = fmt(r["Soil Moisture (%)"]);
+      $("#"+prefix+"light").textContent= fmt(r["Light (%)"]);
+      const tb = $("#"+prefix+"tbl"); tb.innerHTML="";
+      rows.slice(0,50).forEach(o=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${fmt(o["Timestamp (Asia/Bangkok)"])}</td>
+                        <td style="text-align:center">${fmt(o["Temperature (°C)"])}</td>
+                        <td style="text-align:center">${fmt(o["Air Humidity (%)"])}</td>
+                        <td style="text-align:center">${fmt(o["Soil Moisture (%)"])}</td>
+                        <td style="text-align:center">${fmt(o["Light (%)"])}</td>`;
+        tb.appendChild(tr);
+      });
+    }
+
+    // หัวใจจากคะแนนล่าสุด
+    if(scores.length){
+      const s = Number(scores[0]["Score_1_10"])||0;
+      const adv = scores[0]["Advice"]||"";
+      $("#"+prefix+"hearts").textContent = hearts(s);
+      $("#"+prefix+"advice").textContent = adv? ("คำแนะนำ: "+adv) : "—";
+    } else {
+      $("#"+prefix+"hearts").textContent = "—";
+      $("#"+prefix+"advice").textContent = "—";
+    }
+  }
+
+  // เรนเดอร์ครั้งแรก + อัปเดตทุก 20 วินาที
+  const run = ()=>{ render("A","a_"); render("B","b_"); };
+  run();
+  setInterval(run, 20000);
+}
 </script>
 </body>
 </html>
