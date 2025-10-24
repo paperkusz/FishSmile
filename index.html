@@ -479,7 +479,7 @@ async function pack(url, team, limit){
   if(url.startsWith('demo://')) return { data: demoRows(), score: demoScores() };
   const dataUrl = buildURL(url,{action:'data',team,limit});
   const scoreUrl= buildURL(url,{action:'score',team,limit:50});
-  const anaUrl  = buildURL(url,{action:'analyzeNow',team});
+  const anaUrl = buildURL(url,{action:'analyzenow',team});
   const [dRes,_,sRes] = await Promise.allSettled([ getJSON(dataUrl), fetch(anaUrl), getJSON(scoreUrl) ]);
   return {
     data: dRes.status==='fulfilled' ? (dRes.value.rows||[]) : [],
@@ -655,3 +655,4 @@ onReady(()=>{ runSelfTests(); });
 </script>
 </body>
 </html>
+
