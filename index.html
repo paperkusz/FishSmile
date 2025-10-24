@@ -56,11 +56,16 @@
   .dot.ok{background:#10b981}.dot.fail{background:#ef4444}.dot.load{background:#f59e0b}
   .spinner{width:18px;height:18px;border:3px solid #e5e7eb;border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  /* Mascot & illustrations */
   .hero{display:flex;align-items:center;gap:12px}
   .mascot{width:64px;height:64px}
   .teamBadge{display:flex;align-items:center;gap:8px}
   .teamIcon{width:18px;height:18px}
+
+  /* cartoon vibe */
+  .theme-kid .mascot, .theme-teen .mascot { animation: bob 2.5s ease-in-out infinite; }
+  @keyframes bob { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
+  .theme-kid body{ background:linear-gradient(180deg,#e0f7fa 0%, #f5f7fa 100%) }
+  .theme-teen body{ background:linear-gradient(180deg,#f3e5f5 0%, #f5f7fa 100%) }
 </style>
 </head>
 <body>
@@ -289,7 +294,7 @@ const $  = s => document.querySelector(s);
 const tz = 'Asia/Bangkok';
 const byId = id => document.getElementById(id);
 const setTextSafe = (id, text)=>{ const el = byId(id); if(el) el.textContent = text; };
-const bind = (id, ev, fn)=>{ const el = byId(id); if(el) el.addEventListener(ev, fn); else console.warn('Missing element for event binding:', id); };
+const bind = (id, ev, fn)=>{ const el = byId(id); if(el) el.addEventListener(ev, fn); else console.warn('Missing element:', id); };
 const fmtTime = iso => !iso?'-': new Date(iso).toLocaleString('th-TH',{timeZone:tz,hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'});
 const fmtDate = iso => !iso?'-': new Date(iso).toLocaleDateString('th-TH',{timeZone:tz});
 const hearts = n => n>0 ? '❤'.repeat(Math.max(1,Math.min(10,Math.round(n)))) : '—';
@@ -297,7 +302,7 @@ const safeNum = v => { const n = Number(String(v).replace(/,/g,'')); return isFi
 const nowTick = ()=> setTextSafe('nowTH', new Date().toLocaleString('th-TH',{ timeZone: tz }));
 function onReady(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
 
-// ===== Theme & form persistence (on DOM ready) =====
+// ===== Theme & local persistence =====
 onReady(()=>{
   setInterval(nowTick,1000); nowTick();
   const themeSel = byId('theme');
@@ -313,19 +318,17 @@ onReady(()=>{
     el.addEventListener('change',e=> localStorage.setItem('gs_'+id, e.target.value));
   });
 });
-
-// theme apply
 const applyTheme = v => { document.body.className=''; if(v && v!=='default') document.body.classList.add('theme-'+v); localStorage.setItem('theme',v||'default'); };
 
 // ===== Column adapters =====
 const COLS = {
-  ts: ['Timestamp (Asia/Bangkok)','Timestamp','time','Time'],
-  tC: ['Temperature (°C)','AirTemp_C','Temp_C','Temp','Temperature'],
-  rh: ['Air Humidity (%)','Humid (%)','AirHumid_%RH','Humidity'],
+  ts:   ['Timestamp (Asia/Bangkok)','Timestamp','time','Time'],
+  tC:   ['Temperature (°C)','AirTemp_C','Temp_C','Temp','Temperature'],
+  rh:   ['Air Humidity (%)','Humid (%)','AirHumid_%RH','Humidity'],
   soil: ['Soil Moisture (%)','SoilMoist_%','Soil'],
-  light: ['Light (%)','Light_%','Light'],
+  light:['Light (%)','Light_%','Light'],
   pm25: ['PM2.5 (µg/m³)','PM2_5','pm25','PM2.5'],
-  uv: ['UV Index','UV','UV_Index']
+  uv:   ['UV Index','UV','UV_Index']
 };
 const SCORE = { score:['Score_1_10','Score','Score1_10'], advice:['Advice','AI_Advice','Note'], ts:['Timestamp','Timestamp (Asia/Bangkok)','time'] };
 const pick = (row, keys)=>{ for(const k of keys){ if(row && row[k]!=null && row[k]!=='' && row[k]!==undefined) return row[k]; } return null; };
@@ -350,7 +353,11 @@ function setStatus(type,msg){
 // ===== Navigation =====
 const show = id => { ['secForm','secDash','secInsights'].forEach(x=> { const el=byId(x); if(el) el.style.display = (x===id)?'block':'none'; }); };
 onReady(()=>{
-  bind('navForm','click', ()=> show('secForm'));
+  bind('navForm','click', ()=>{
+    const done = localStorage.getItem('gs_profile_done')==='1';
+    if(done){ alert('คุณบันทึกโปรไฟล์แล้ว ให้กด "แก้ไขโปรไฟล์" หากต้องการแก้'); return; }
+    show('secForm');
+  });
   bind('navDash','click', ()=> show('secDash'));
   bind('navInsight','click', ()=> show('secInsights'));
   bind('btnEditProfile','click', ()=> show('secForm'));
@@ -362,12 +369,13 @@ let ctx={urlA:'',urlB:'',limit:50, interval:20000, cache:{A:{},B:{}}};
 (function autoStart(){
   onReady(()=>{
     const done = localStorage.getItem('gs_profile_done')==='1';
-    const urlA = localStorage.getItem('gs_last_urlA');
-    const urlB = localStorage.getItem('gs_last_urlB');
+    let urlA = localStorage.getItem('gs_last_urlA')||'';
+    let urlB = localStorage.getItem('gs_last_urlB')||'';
     const limit = +(localStorage.getItem('gs_last_limit')||50);
     const interval = +(localStorage.getItem('gs_last_interval')||20000);
     const demo = localStorage.getItem('gs_last_demo')==='on';
-    if(done && urlA && urlB){
+    if(done && (urlA || urlB)){
+      if(!urlA && urlB) urlA=urlB; if(!urlB && urlA) urlB=urlA;
       ctx={urlA,urlB,limit,interval,cache:{A:{},B:{}}};
       try{ byId('dsA') && (byId('dsA').textContent= demo? 'DEMO' : (new URL(urlA)).host); }catch(e){}
       try{ byId('dsB') && (byId('dsB').textContent= demo? 'DEMO' : (new URL(urlB)).host); }catch(e){}
@@ -380,7 +388,7 @@ let ctx={urlA:'',urlB:'',limit:50, interval:20000, cache:{A:{},B:{}}};
   });
 })();
 
-// ===== Buttons (onReady) =====
+// ===== Buttons =====
 onReady(()=>{
   bind('btnTest','click', async ()=>{
     const baseA = (byId('webappA')?.value.trim()||byId('webapp')?.value.trim()||'');
@@ -389,8 +397,9 @@ onReady(()=>{
     setStatus('load','ทดสอบเชื่อมต่อ…');
     try{
       const ping = await getJSON(buildURL(baseA,{action:'ping'}));
-      if(ping && (ping.ok||ping.status==='ok')) setStatus('ok','เชื่อมต่อได้'); else setStatus('fail','ตอบกลับไม่ถูกต้อง');
-    }catch(e){ setStatus('fail','ติดต่อไม่ได้'); }
+      if(ping && (ping.ok||ping.status==='ok')) setStatus('ok','เชื่อมต่อได้ ✔');
+      else setStatus('fail','ตอบกลับไม่ถูกต้อง (ไม่มี action=ping)');
+    }catch(e){ setStatus('fail','ติดต่อไม่ได้ (ตรวจสอบ /exec และ Deploy)'); }
   });
 
   bind('btnStart','click', async ()=>{
@@ -398,17 +407,14 @@ onReady(()=>{
     const baseA = byId('webappA')?.value.trim()||'';
     const baseB = byId('webappB')?.value.trim()||'';
     const demo = byId('demo')?.value==='on';
-    if(!demo && !base && !(baseA && baseB)){ setStatus('fail','กรุณาใส่ Web App URL (ลงท้าย /exec) หรือเปิดโหมดทดสอบ'); return; }
+    if(!demo && !base && !(baseA && baseB)){ setStatus('fail','ใส่ Web App URL หรือเปิดโหมดทดสอบ'); return; }
     const urlA = demo? 'demo://A' : (baseA || base);
     const urlB = demo? 'demo://B' : (baseB || base);
-    if(!demo){
-      try{ new URL(urlA); new URL(urlB); }catch(_){ setStatus('fail','URL ไม่ถูกต้อง'); return; }
-    }
+    if(!demo){ try{ new URL(urlA); new URL(urlB); }catch(_){ setStatus('fail','URL ไม่ถูกต้อง'); return; } }
 
     const pf = {action:'saveProfile', name:byId('name')?.value.trim()||'', plant:byId('plant')?.value.trim()||'', size:byId('size')?.value.trim()||'', light:byId('lightCond')?.value, airflow:byId('airflow')?.value, ac:byId('ac')?.value};
     setStatus('load','กำลังบันทึกโปรไฟล์…');
-    if(!demo) await Promise.allSettled([ postJSON(urlA,{...pf,team:'A'}), postJSON(urlB,{...pf,team:'B'}) ]);
-    setStatus('ok','พร้อมแล้ว');
+    if(!demo) Promise.allSettled([ postJSON(urlA,{...pf,team:'A'}), postJSON(urlB,{...pf,team:'B'}) ]);
 
     localStorage.setItem('gs_last_urlA', urlA);
     localStorage.setItem('gs_last_urlB', urlB);
@@ -426,16 +432,25 @@ onReady(()=>{
       byId('dsA') && (byId('dsA').textContent = (demo? 'DEMO' : (new URL(urlA)).host));
       byId('dsB') && (byId('dsB').textContent = (demo? 'DEMO' : (new URL(urlB)).host));
     }catch(e){}
+    setStatus('ok','พร้อมแล้ว');
     show('secDash');
     startDashboard();
   });
 
-  bind('btnGoInsights','click', ()=>{ show('secInsights'); renderInsights(); });
+  bind('btnGoInsights','click', async ()=>{
+    show('secInsights');
+    // ยิงวิเคราะห์รอบใหม่ (non-blocking)
+    const tasks=[];
+    if(!ctx.urlA.startsWith('demo://')) tasks.push(fetch(buildURL(ctx.urlA,{action:'analyzeNow',team:'A'})));
+    if(!ctx.urlB.startsWith('demo://')) tasks.push(fetch(buildURL(ctx.urlB,{action:'analyzeNow',team:'B'})));
+    Promise.allSettled(tasks).finally(()=> renderInsights() );
+  });
+
   bind('btnBackDash','click', ()=> show('secDash'));
   bind('btnRefresh','click', ()=> tickOnce());
 });
 
-// ===== Demo data =====
+// ===== Demo generators =====
 function demoRows(){
   const now=Date.now();
   const mk = i=>({
@@ -461,11 +476,9 @@ function demoScores(){
 
 // ===== Dashboard polling =====
 async function pack(url, team, limit){
-  if(url.startsWith('demo://')){
-    return { data: demoRows(), score: demoScores() };
-  }
+  if(url.startsWith('demo://')) return { data: demoRows(), score: demoScores() };
   const dataUrl = buildURL(url,{action:'data',team,limit});
-  const scoreUrl= buildURL(url,{action:'score',team});
+  const scoreUrl= buildURL(url,{action:'score',team,limit:50});
   const anaUrl  = buildURL(url,{action:'analyzeNow',team});
   const [dRes,_,sRes] = await Promise.allSettled([ getJSON(dataUrl), fetch(anaUrl), getJSON(scoreUrl) ]);
   return {
@@ -501,7 +514,6 @@ async function renderTeam(url,team,prefix){
 
     if(score.length){
       let scA = safeNum(pick(score[0],SCORE.score))||0;
-      if(scA<=5) scA=scA*2;
       byId(prefix+'hearts') && (byId(prefix+'hearts').textContent=hearts(scA));
       byId(prefix+'advice') && (byId(prefix+'advice').textContent= pick(score[0],SCORE.advice)?('คำแนะนำ: '+pick(score[0],SCORE.advice)):'—');
     }else{
@@ -534,8 +546,8 @@ function renderInsights(){
   const A = (ctx.cache.A.score||[]).map(o=>({ts:pick(o,SCORE.ts), s:+(pick(o,SCORE.score)||0)})).slice(0,30).reverse();
   const B = (ctx.cache.B.score||[]).map(o=>({ts:pick(o,SCORE.ts), s:+(pick(o,SCORE.score)||0)})).slice(0,30).reverse();
   const labels = (A.length?A:B).map(x=> (x.ts? new Date(x.ts).toLocaleTimeString('th-TH',{timeZone:tz,hour:'2-digit',minute:'2-digit'}):'' ));
-  const dataA = A.map(x=> x.s<=5? x.s*2: x.s);
-  const dataB = B.map(x=> x.s<=5? x.s*2: x.s);
+  const dataA = A.map(x=> x.s);
+  const dataB = B.map(x=> x.s);
 
   const canvas = byId('chartHearts'); if(!canvas) return;
   const ctx2 = canvas.getContext('2d');
@@ -615,7 +627,7 @@ function healthHTML(env){
 function avgBy(kind){
   const coll = (rows)=> (rows||[]).map(o=>({d: kind==='day'? fmtDate(pick(o,SCORE.ts)): weekKey(pick(o,SCORE.ts)), s: +(pick(o,SCORE.score)||0)}));
   const A = coll(ctx.cache.A.score), B = coll(ctx.cache.B.score);
-  const agg = (arr)=> arr.reduce((m,x)=>{ const k=x.d; const v=x.s<=5?x.s*2:x.s; (m[k]??=[]).push(v); return m; },{});
+  const agg = (arr)=> arr.reduce((m,x)=>{ const k=x.d; (m[k]??=[]).push(x.s); return m; },{});
   const avg = (obj)=> Object.entries(obj).map(([d,vals])=>({date:d, avg: +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)})).sort((a,b)=> a.date.localeCompare(b.date));
   return { A: avg(agg(A)), B: avg(agg(B)) };
 }
@@ -633,23 +645,13 @@ function tableSummary(obj){
   return rows.join('');
 }
 
-// ===== Self-tests (dev) =====
+// ===== Self-tests =====
 function runSelfTests(){
-  console.group('%cGreenSync self-test','color:#10b981;font-weight:bold');
-  // Test 1: required IDs exist
   const mustHave = ['nowTH','theme','navDash','secDash','chartHearts','a_tbl','b_tbl','btnStart'];
-  const missing = mustHave.filter(id=>!byId(id));
-  console.log('Required IDs:', mustHave);
-  console.log('Missing:', missing);
-  console.assert(missing.length===0, 'Some required elements are missing:', missing);
-  // Test 2: helpers do not throw when element missing
-  try{ setTextSafe('___not_exist___','x'); console.log('setTextSafe OK'); }catch(e){ console.error('setTextSafe threw', e); }
-  // Test 3: hearts mapping
-  console.assert(hearts(0)==='—', 'hearts(0) should be dash');
-  console.assert(hearts(1).length>=1 && hearts(1).length<=10, 'hearts(1..10) length OK');
-  console.groupEnd();
+  const miss = mustHave.filter(id=>!byId(id));
+  console.assert(miss.length===0, 'Missing IDs:', miss);
 }
-onReady(runSelfTests);
+onReady(()=>{ runSelfTests(); });
 </script>
 </body>
 </html>
